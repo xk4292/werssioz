@@ -1,0 +1,69 @@
+DROP TABLE IF EXISTS water_measurements CASCADE;
+DROP TABLE IF EXISTS pipeline_sections CASCADE;
+DROP TABLE IF EXISTS consumption_districts CASCADE;
+DROP TABLE IF EXISTS pipeline_types CASCADE;
+
+CREATE TABLE pipeline_types (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    diameter INTEGER NOT NULL,
+    material VARCHAR(100) NOT NULL,
+    pressure_standard DECIMAL(10, 2) NOT NULL,
+    service_life INTEGER NOT NULL,
+    UNIQUE(name, diameter)
+);
+
+CREATE TABLE pipeline_sections (
+    id SERIAL PRIMARY KEY,
+    pipeline_type_id INTEGER NOT NULL REFERENCES pipeline_types(id) ON DELETE RESTRICT,
+    section_number VARCHAR(50) NOT NULL UNIQUE,
+    status VARCHAR(50) NOT NULL,
+    installation_date DATE NOT NULL,
+    length DECIMAL(10, 2) NOT NULL
+);
+
+CREATE TABLE consumption_districts (
+    id SERIAL PRIMARY KEY,
+    district_name VARCHAR(100) NOT NULL UNIQUE,
+    house_count INTEGER NOT NULL,
+    dispatch_address TEXT NOT NULL,
+    phone VARCHAR(20) NOT NULL
+);
+
+CREATE TABLE water_measurements (
+    id SERIAL PRIMARY KEY,
+    pipeline_section_id INTEGER NOT NULL REFERENCES pipeline_sections(id) ON DELETE CASCADE,
+    consumption_district_id INTEGER NOT NULL REFERENCES consumption_districts(id) ON DELETE CASCADE,
+    measurement_time TIMESTAMP NOT NULL,
+    pressure DECIMAL(10, 2) NOT NULL,
+    flow_volume DECIMAL(10, 2) NOT NULL
+);
+
+CREATE INDEX idx_measurements_time ON water_measurements(measurement_time);
+
+INSERT INTO pipeline_types (name, diameter, material, pressure_standard, service_life) VALUES
+('Чугунная', 300, 'Чугун', 10.5, 50),
+('Чугунная', 400, 'Чугун', 11.0, 50),
+('Стальная', 200, 'Сталь', 12.0, 40),
+('Пластиковая ПЭ', 110, 'Полиэтилен ПЭ-100', 8.0, 30);
+
+
+INSERT INTO consumption_districts (district_name, house_count, dispatch_address, phone) VALUES
+('Центральный', 245, 'ул. Ленина, д. 15', '+7(495)123-45-67'),
+('Северный', 128, 'ул. Северная, д. 8', '+7(495)234-56-78'),
+('Южный', 189, 'ул. Южная, д. 23', '+7(495)345-67-89');
+
+
+INSERT INTO pipeline_sections (pipeline_type_id, section_number, status, installation_date, length) VALUES
+(1, 'ЧГ-001', 'Активный', '2015-06-15', 450.50),
+(2, 'ЧГ-002', 'Активный', '2016-08-20', 380.00),
+(3, 'СТ-003', 'Активный', '2018-07-19', 670.00),
+(4, 'ПЭ-003', 'Неактивный', '2020-03-15', 550.00);
+
+
+
+INSERT INTO water_measurements (pipeline_section_id, consumption_district_id, measurement_time, pressure, flow_volume) VALUES
+(1, 1, '2024-01-15 06:00:00', 9.8, 45.50),
+(1, 1, '2024-01-15 08:00:00', 10.2, 52.30),
+(2, 2, '2024-01-15 07:00:00', 10.5, 38.20),
+(3, 3, '2024-01-15 08:00:00', 10.8, 55.80);
